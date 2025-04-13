@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Booking System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background: #f4f4f4;
+            margin: 0;
+            padding-bottom: 60px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        input, select, button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+        }
+        button {
+            background: blue;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #homePage {
+            display: none;
+        }
+        .confirmation-message {
+            margin-top: 20px;
+            padding: 10px;
+            background: lightgreen;
+            border-radius: 5px;
+            color: green;
+        }
+        .booking-list {
+            margin-top: 20px;
+        }
+        .booking-item {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .ad-banner {
+            background: #ffcc00;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        .footer-ad {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #ff6600;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Page -->
+    <div class="container" id="loginPage">
+        <h2>Login</h2>
+        
+        <div class="ad-banner">🔥 Special Offer! Get 20% off on bookings today! 🔥</div>
+
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="goToBooking()">Login</button>
+    </div>
+
+    <!-- Event Booking Page -->
+    <div class="container" id="homePage">
+        <h2>Event Booking</h2>
+
+        <div class="ad-banner">🎉 Book now & enter a lucky draw to win free tickets! 🎉</div>
+
+        <input type="text" id="name" placeholder="Full Name">
+        <input type="email" id="email" placeholder="Email ID">
+        <input type="text" id="phone" placeholder="Phone Number">
+        
+        <select id="event">
+            <option value="Dance Show">Dance Show</option>
+            <option value="Fashion Show">Fashion Show</option>
+            <option value="Singing Show">Singing Show</option>
+            <option value="Theatre">Theatre</option>
+            <option value="Concert (DJ)">Concert (DJ)</option>
+        </select>
+
+        <input type="date" id="eventDate">
+        <input type="number" id="tickets" placeholder="Number of Tickets" oninput="calculateTotal()">
+        
+        <select id="payment">
+            <option value="GPay">GPay</option>
+            <option value="PhonePe">PhonePe</option>
+            <option value="Paytm">Paytm</option>
+        </select>
+
+        <p>Total Amount: ₹<span id="total">0</span></p>
+        <button onclick="bookNow()">Book Now</button>
+
+        <div class="confirmation-message" id="confirmationMessage" style="display: none;"></div>
+
+        <div class="booking-list" id="bookingList"></div>
+    </div>
+
+    <!-- Sticky Footer Ad -->
+    <div class="footer-ad">
+        🎁 Limited-Time Offer: Use code **EVENT50** for a ₹50 discount!
+    </div>
+
+    <script>
+        function goToBooking() {
+            let username = document.getElementById("username").value.trim();
+            let password = document.getElementById("password").value.trim();
+            
+            if (username === "" || password === "") {
+                alert("Please enter a valid username and password.");
+                return;
+            }
+            
+            document.getElementById("loginPage").style.display = "none"; 
+            document.getElementById("homePage").style.display = "block";
+        }
+
+        function calculateTotal() {
+            let tickets = parseInt(document.getElementById("tickets").value) || 0;
+            let pricePerTicket = 50;
+            let total = tickets * pricePerTicket;
+            document.getElementById("total").innerText = total.toFixed(2);
+        }
+
+        function bookNow() {
+            let name = document.getElementById("name").value.trim();
+            let email = document.getElementById("email").value.trim();
+            let phone = document.getElementById("phone").value.trim();
+            let event = document.getElementById("event").value;
+            let eventDate = document.getElementById("eventDate").value;
+            let tickets = parseInt(document.getElementById("tickets").value);
+            let payment = document.getElementById("payment").value;
+            let total = parseFloat(document.getElementById("total").innerText);
+
+            if (!name || !email || !phone || !eventDate || isNaN(tickets) || tickets <= 0) {
+                alert("Please fill in all details correctly.");
+                return;
+            }
+
+            const bookingData = {
+                name: name,
+                email: email,
+                phone: phone,
+                event: event,
+                eventDate: eventDate,
+                tickets: tickets,
+                payment: payment,
+                total: total
+            };
+
+            let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+            bookings.push(bookingData);
+            localStorage.setItem('bookings', JSON.stringify(bookings));
+
+            document.getElementById("confirmationMessage").style.display = "block";
+            document.getElementById("confirmationMessage").innerHTML = `
+                <strong>Booking Successful!</strong><br>
+                Name: ${name}<br>
+                Event: ${event}<br>
+                Date: ${eventDate}<br>
+                Total: ₹${total.toFixed(2)}<br>
+                Payment Method: ${payment}
+            `;
+
+            displayBookings();
+        }
+
+        function displayBookings() {
+            let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+            const bookingList = document.getElementById('bookingList');
+            bookingList.innerHTML = '';
+
+            bookings.forEach(booking => {
+                const bookingDiv = document.createElement('div');
+                bookingDiv.classList.add('booking-item');
+                bookingDiv.innerHTML = `
+                    <p><strong>Name:</strong> ${booking.name}</p>
+                    <p><strong>Event:</strong> ${booking.event}</p>
+                    <p><strong>Date:</strong> ${booking.eventDate}</p>
+                    <p><strong>Total:</strong> ₹${booking.total.toFixed(2)}</p>
+                    <p><strong>Payment:</strong> ${booking.payment}</p>
+                `;
+                bookingList.appendChild(bookingDiv);
+            });
+        }
+
+        window.onload = function() {
+            displayBookings();
+        };
+    </script>
+</body>
+</html>
